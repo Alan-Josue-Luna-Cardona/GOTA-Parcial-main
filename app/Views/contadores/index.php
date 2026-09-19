@@ -11,9 +11,14 @@
 
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
         <h2 class="fw-bold m-0" style="color:#1a1a2e;">Contadores</h2>
-        <a href="/contadores/nuevo" class="btn btn-primary">
-            <i class="fa-solid fa-plus me-1"></i> Nuevo contador
-        </a>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="<?= site_url('contadores/exportar') . ($mostrarInactivos ? '?mostrar=inactivos' : '') ?>" class="btn btn-outline-success">
+                <i class="fa-solid fa-file-csv me-1"></i> Exportar
+            </a>
+            <a href="/contadores/nuevo" class="btn btn-primary">
+                <i class="fa-solid fa-plus me-1"></i> Nuevo contador
+            </a>
+        </div>
     </div>
 
     <?php if (session()->getFlashdata('mensaje')): ?>
