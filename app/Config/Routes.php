@@ -33,6 +33,7 @@ $routes->post('/clientes/activar/(:num)', 'ClientesController::activar/$1', ['fi
 
 // Rutas del modulo de Contadores
 $routes->get('/contadores', 'ContadoresController::index', ['filter' => 'auth']);
+$routes->get('/contadores/exportar', 'ContadoresController::exportar', ['filter' => 'auth']);
 $routes->get('/contadores/nuevo', 'ContadoresController::nuevo', ['filter' => 'auth']);
 $routes->post('/contadores/crear', 'ContadoresController::crear', ['filter' => 'auth']);
 $routes->get('/contadores/editar/(:num)', 'ContadoresController::editar/$1', ['filter' => 'auth']);
