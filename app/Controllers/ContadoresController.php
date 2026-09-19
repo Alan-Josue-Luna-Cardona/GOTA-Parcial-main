@@ -25,21 +25,51 @@ class ContadoresController extends BaseController
     {
         $mostrarInactivos = $this->request->getGet('mostrar') === 'inactivos';
 
-        $builder = $this->contadoresModel
-            ->select('Contadores.*, Clientes.nombre as cliente_nombre, Tipos_Servicio.nombre as tipo_servicio_nombre')
-            ->join('Clientes', 'Clientes.id = Contadores.cliente_id')
-            ->join('Tipos_Servicio', 'Tipos_Servicio.id = Contadores.tipo_servicio_id');
-
-        if (!$mostrarInactivos) {
-            $builder->where('Contadores.activo', 1);
-        }
-
-        $contadores = $builder->findAll();
-
         return view('contadores/index', [
-            'contadores'       => $contadores,
+            'contadores'       => $this->obtenerContadores($mostrarInactivos),
             'mostrarInactivos' => $mostrarInactivos,
         ]);
+    }
+
+    // Exporta el listado a un archivo .csv. Respeta el mismo filtro del listado
+    // (?mostrar=inactivos), así que el archivo trae lo mismo que se ve en pantalla.
+    public function exportar()
+    {
+        $mostrarInactivos = $this->request->getGet('mostrar') === 'inactivos';
+        $contadores       = $this->obtenerContadores($mostrarInactivos);
+
+        $archivo = fopen('php://temp', 'r+');
+
+        fputcsv($archivo, [
+            'Código', 'Cliente', 'Tipo de servicio', 'Sector',
+            'Ubicación', 'Referencia', 'Fecha de instalación', 'Estado',
+        ], ',', '"', '\\');
+
+        foreach ($contadores as $contador) {
+            fputcsv($archivo, [
+                $this->csvSeguro($contador['codigo']),
+                $this->csvSeguro($contador['cliente_nombre']),
+                $this->csvSeguro($contador['tipo_servicio_nombre']),
+                $this->csvSeguro($contador['sector']),
+                $this->csvSeguro($contador['ubicacion']),
+                $this->csvSeguro($contador['referencia']),
+                $this->csvSeguro($contador['fecha_instalacion']),
+                $contador['activo'] ? 'Activo' : 'Inactivo',
+            ], ',', '"', '\\');
+        }
+
+        rewind($archivo);
+        $csv = stream_get_contents($archivo);
+        fclose($archivo);
+
+        $nombreArchivo = 'contadores_' . date('Y-m-d') . '.csv';
+
+        // El BOM UTF-8 al inicio hace que Excel muestre bien tildes y ñ.
+        return $this->response
+            ->setHeader('Content-Type', 'text/csv; charset=UTF-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"')
+            ->setHeader('Cache-Control', 'no-store')
+            ->setBody("\xEF\xBB\xBF" . $csv);
     }
 
     // Formulario para crear un contador nuevo
@@ -172,4 +202,21 @@ class ContadoresController extends BaseController
 
         return redirect()->to('/contadores')->with('mensaje', 'Contador reactivado correctamente');
     }
+
+    // Consulta compartida por el listado y la exportación: trae el nombre del
+    // cliente y del tipo de servicio en vez de solo los ids.
+    private function obtenerContadores(bool $mostrarInactivos): array
+    {
+        $builder = $this->contadoresModel
+            ->select('Contadores.*, Clientes.nombre as cliente_nombre, Tipos_Servicio.nombre as tipo_servicio_nombre')
+            ->join('Clientes', 'Clientes.id = Contadores.cliente_id')
+            ->join('Tipos_Servicio', 'Tipos_Servicio.id = Contadores.tipo_servicio_id');
+
+        if (!$mostrarInactivos) {
+            $builder->where('Contadores.activo', 1);
+        }
+
+        return $builder->findAll();
+    }
+
 }
