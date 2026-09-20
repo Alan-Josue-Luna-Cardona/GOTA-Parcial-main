@@ -5,3 +5,6 @@ Cambios Realizados
 
 3. Exportar listado CSV.
 - Descarga el un archivo .csv con el listado de los contadores y toda la información relevante
+
+Link del video, demostrando la integración de los camibos
+https://drive.google.com/file/d/1xyddZfasO830vIgT5Wwcgeam4k4fLLTX/view?usp=sharing
