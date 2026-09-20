@@ -219,4 +219,16 @@ class ContadoresController extends BaseController
         return $builder->findAll();
     }
 
+    // Evita la inyección de fórmulas al abrir el CSV en Excel
+    // correción necesario para la descarga del .csv
+    private function csvSeguro($valor): string
+    {
+        $texto = (string) ($valor ?? '');
+
+        if ($texto !== '' && in_array($texto[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+            return "'" . $texto;
+        }
+
+        return $texto;
+    }
 }
